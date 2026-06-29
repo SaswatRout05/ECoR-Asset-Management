@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECoR-OAMS Category Management — Dynamically manage asset categories">
+    <title>ECoR-OAMS · Category Management</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🚆</div>
+            <div>
+                <h2>ECoR-OAMS</h2>
+                <span>Asset Management</span>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="/assets"><span class="nav-icon">📦</span> Assets</a>
+                <a href="/transfers"><span class="nav-icon">🔄</span> Transfers</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Reports</div>
+                <a href="/assets?tab=depreciation"><span class="nav-icon">📉</span> Depreciation</a>
+            </div>
+            <div class="nav-section auditor-only" style="display:none">
+                <div class="nav-section-title">Settings</div>
+                <a href="/categories" class="active"><span class="nav-icon">⚙️</span> Categories</a>
+                <a href="/archive"><span class="nav-icon">🗄️</span> Archive</a>
+            </div>
+            <div class="nav-section it-admin-only" style="display:none">
+                <div class="nav-section-title">Admin</div>
+                <a href="/admin/users"><span class="nav-icon">👥</span> User Management</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Support</div>
+                <a href="/faq"><span class="nav-icon">📚</span> FAQ / Knowledge Base</a>
+                <a href="/report"><span class="nav-icon">🐛</span> Report System Issue</a>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar"></div>
+                <div class="user-details">
+                    <div class="user-name"></div>
+                    <div class="user-role"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="main-content">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="btn btn-ghost btn-icon" id="menuToggle" style="display:none">☰</button>
+                <h1>Category Management</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-outline btn-sm btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <div class="page-content">
+
+            <!-- Intro / Info Banner -->
+            <div class="alert-banner alert-info" style="margin-bottom:24px; animation: fadeInUp 0.4s ease-out;">
+                <span class="alert-icon">ℹ</span>
+                <span>As an Auditor, you can create, rename, or delete asset categories dynamically. Deleting a category is restricted if it is referenced by existing assets.</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; align-items: start;">
+                
+                <!-- Create Category Card -->
+                <div class="card" style="animation-delay: 0.1s">
+                    <div class="card-header">
+                        <h2>➕ Add Custom Category</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="createCategoryForm">
+                            <div class="form-group" style="margin-bottom:16px;">
+                                <label for="newCatName">Category Name <span class="required">*</span></label>
+                                <input class="form-control" id="newCatName" required placeholder="e.g. Server Infrastructure" autocomplete="off" style="width:100%;">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block" id="btnCreateCat">Save Category</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Categories List Card -->
+                <div class="card" style="animation-delay: 0.2s">
+                    <div class="card-header">
+                        <h2>📋 Dynamic Categories List</h2>
+                    </div>
+                    <div class="card-body no-padding">
+                        <div class="data-table-wrapper">
+                            <table class="data-table" id="categoriesTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 80px;">ID</th>
+                                        <th>Category Name</th>
+                                        <th style="width: 140px; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoriesBody">
+                                    <tr><td colspan="3"><div class="loading-overlay"><div class="spinner"></div><span>Loading categories…</span></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ═══ EDIT CATEGORY MODAL ═══ -->
+<div class="modal-overlay" id="editCategoryModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Rename Category</h2>
+            <button class="modal-close" onclick="closeModal('editCategoryModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="editCategoryForm">
+                <input type="hidden" id="editCatId">
+                <div class="form-group" style="margin-bottom:20px;">
+                    <label for="editCatName">Category Name <span class="required">*</span></label>
+                    <input class="form-control" id="editCatName" required placeholder="Rename category..." autocomplete="off">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editCategoryModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="editSubmit">Rename Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Help Bot Sidebar -->
+<div class="ai-sidebar" id="aiSidebar">
+    <div class="ai-sidebar-header">
+        <h3>🤖 Help Bot</h3>
+        <button class="modal-close" id="aiSidebarClose">✕</button>
+    </div>
+    <div class="ai-sidebar-body">
+        <div class="helpbot-messages" id="sidebarBotMessages"></div>
+        <div class="helpbot-input-area">
+            <input type="text" id="sidebarBotInput" placeholder="Ask me anything…" autocomplete="off">
+            <button id="sidebarBotSend">Send</button>
+        </div>
+    </div>
+</div>
+<button class="ai-toggle-btn" id="aiToggleBtn" title="Help Bot">🤖</button>
+
+<script src="/js/app.js"></script>
+<script src="/js/helpbot.js"></script>
+<script src="/js/categories.js"></script>
+<script>
+    // Initialize sidebar Help Bot
+    document.addEventListener('DOMContentLoaded', () => {
+        HelpBot.init('#sidebarBotMessages', '#sidebarBotInput', '#sidebarBotSend');
+    });
+</script>
+</body>
+</html>

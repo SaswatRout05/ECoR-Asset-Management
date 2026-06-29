@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECoR-OAMS Asset Register — Create, view, and manage railway office assets">
+    <title>ECoR-OAMS · Assets</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🚆</div>
+            <div>
+                <h2>ECoR-OAMS</h2>
+                <span>Asset Management</span>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="/assets" class="active"><span class="nav-icon">📦</span> Assets</a>
+                <a href="/transfers"><span class="nav-icon">🔄</span> Transfers</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Reports</div>
+                <a href="/assets?tab=depreciation"><span class="nav-icon">📉</span> Depreciation</a>
+            </div>
+            <div class="nav-section auditor-only" style="display:none">
+                <div class="nav-section-title">Settings</div>
+                <a href="/categories"><span class="nav-icon">⚙️</span> Categories</a>
+                <a href="/archive"><span class="nav-icon">🗄️</span> Archive</a>
+            </div>
+            <div class="nav-section it-admin-only" style="display:none">
+                <div class="nav-section-title">Admin</div>
+                <a href="/admin/users"><span class="nav-icon">👥</span> User Management</a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Support</div>
+                <a href="/faq"><span class="nav-icon">📚</span> FAQ / Knowledge Base</a>
+                <a href="/report"><span class="nav-icon">🐛</span> Report System Issue</a>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar"></div>
+                <div class="user-details">
+                    <div class="user-name"></div>
+                    <div class="user-role"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="main-content">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="btn btn-ghost btn-icon" id="menuToggle" style="display:none">☰</button>
+                <h1 id="pageTitle">Asset Register</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-outline btn-sm btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <div class="page-content">
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Search assets by name, ID, or invoice…">
+                </div>
+                <!-- CR-2026-005: Global Search -->
+                <div class="global-search-box">
+                    <span class="search-icon">🌐</span>
+                    <input type="text" id="globalSearchInput" placeholder="Global search: ID, serial, MAC, room…">
+                </div>
+                <select class="filter-select" id="filterCategory">
+                    <option value="">All Categories</option>
+                    <!-- CR-2026-006: Populated dynamically from /api/categories -->
+                </select>
+                <select class="filter-select" id="filterStatus">
+                    <option value="">All Statuses</option>
+                    <option value="In-Use">In-Use</option>
+                    <option value="Under Repair">Under Repair</option>
+                    <option value="Surplus">Surplus</option>
+                    <option value="Condemned">Condemned</option>
+                </select>
+                <div style="margin-left:auto; display:flex; gap:8px;">
+                    <button class="btn btn-primary write-only" id="btnCreateAsset" onclick="openModal('createAssetModal')">+ New Asset</button>
+                    <button class="btn btn-accent write-only" id="btnCreateBundle" onclick="openModal('bundleModal')">+ Desktop Bundle</button>
+                </div>
+            </div>
+
+            <!-- Tab Switcher -->
+            <div style="display:flex;gap:4px;margin-bottom:16px" id="tabSwitcher">
+                <button class="btn btn-ghost tab-btn active" data-tab="register" onclick="switchTab('register')">📋 Register</button>
+                <button class="btn btn-ghost tab-btn" data-tab="depreciation" onclick="switchTab('depreciation')">📉 Depreciation</button>
+            </div>
+
+            <!-- Asset Table -->
+            <div class="card" id="registerTab">
+                <div class="card-body no-padding">
+                    <div class="data-table-wrapper">
+                        <table class="data-table" id="assetsTable">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="asset_id">Asset ID <span class="sort-indicator">⇅</span></th>
+                                    <th class="sortable" data-sort="asset_name">Name <span class="sort-indicator">⇅</span></th>
+                                    <th class="sortable" data-sort="category">Category <span class="sort-indicator">⇅</span></th>
+                                    <th class="sortable" data-sort="purchase_date">Purchase Date <span class="sort-indicator">⇅</span></th>
+                                    <th class="sortable" data-sort="purchase_cost">Cost (₹) <span class="sort-indicator">⇅</span></th>
+                                    <th>Status</th>
+                                    <th>Invoice Ref</th>
+                                    <th>Priority Tag</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assetsBody">
+                                <tr><td colspan="9"><div class="loading-overlay"><div class="spinner"></div><span>Loading assets…</span></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Depreciation Table -->
+            <div class="card" id="depreciationTab" style="display:none">
+                <div class="card-header">
+                    <h2>📉 Depreciation Schedule (Straight-Line · 5 Years)</h2>
+                </div>
+                <div class="card-body no-padding">
+                    <div class="data-table-wrapper">
+                        <table class="data-table" id="depTable">
+                            <thead>
+                                <tr>
+                                    <th>Asset ID</th>
+                                    <th>Name</th>
+                                    <th>Purchase Cost (₹)</th>
+                                    <th>Purchase Date</th>
+                                    <th>Age (Yrs)</th>
+                                    <th>Annual Dep. (₹)</th>
+                                    <th>Accum. Dep. (₹)</th>
+                                    <th>Book Value (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="depBody">
+                                <tr><td colspan="8"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ═══ CREATE ASSET MODAL ═══ -->
+<div class="modal-overlay" id="createAssetModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Create New Asset</h2>
+            <button class="modal-close" onclick="closeModal('createAssetModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="createAssetForm">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Asset Name <span class="required">*</span></label>
+                        <input class="form-control" id="ca_name" required placeholder="e.g. Dell OptiPlex 7090">
+                    </div>
+                    <div class="form-group">
+                        <label>Category <span class="required">*</span></label>
+                        <select class="form-control" id="ca_category" required>
+                            <option value="">Select category</option>
+                            <!-- CR-2026-006: Populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>PL Number</label>
+                        <input class="form-control" id="ca_pl" maxlength="8" placeholder="PL-XXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>Purchase Date <span class="required">*</span></label>
+                        <input class="form-control" type="date" id="ca_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Purchase Cost (₹) <span class="required">*</span></label>
+                        <input class="form-control" type="number" id="ca_cost" min="1" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>GeM Invoice Ref <span class="required">*</span></label>
+                        <input class="form-control" id="ca_invoice" required placeholder="GEM/2024/B/XXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>AMC Expiry Date</label>
+                        <input class="form-control" type="date" id="ca_amc">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select class="form-control" id="ca_status">
+                            <option value="In-Use">In-Use</option>
+                            <option value="Under Repair">Under Repair</option>
+                            <option value="Surplus">Surplus</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- IT Details Section (shown when category = IT Hardware) -->
+                <div id="itDetailsSection" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-light)">
+                    <h3 style="font-size:0.95rem;margin-bottom:12px">IT Equipment Details</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Serial Number <span class="required">*</span></label>
+                            <input class="form-control" id="ca_serial" placeholder="Manufacturer serial">
+                        </div>
+                        <div class="form-group">
+                            <label>Make & Model <span class="required">*</span></label>
+                            <input class="form-control" id="ca_make" placeholder="e.g. Dell OptiPlex 7090 MT">
+                        </div>
+                        <div class="form-group admin-only">
+                            <label>MAC Address</label>
+                            <input class="form-control" id="ca_mac" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17">
+                            <span class="form-hint">Format: XX:XX:XX:XX:XX:XX</span>
+                        </div>
+                        <div class="form-group admin-only">
+                            <label>IP Address</label>
+                            <input class="form-control" id="ca_ip" placeholder="10.100.5.xxx" maxlength="15">
+                        </div>
+                        <div class="form-group">
+                            <label>Warranty Expiry</label>
+                            <input class="form-control" type="date" id="ca_warranty">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('createAssetModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="ca_submit">Create Asset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ DESKTOP BUNDLE MODAL ═══ -->
+<div class="modal-overlay" id="bundleModal">
+    <div class="modal" style="max-width:720px">
+        <div class="modal-header">
+            <h2>Create Desktop Bundle</h2>
+            <button class="modal-close" onclick="closeModal('bundleModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="alert-banner alert-info" style="margin-bottom:16px">
+                <span class="alert-icon">ℹ</span>
+                <span>Creates CPU + Monitor as separate assets linked by the same GeM Invoice Reference.</span>
+            </div>
+            <form id="bundleForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>GeM Invoice Ref <span class="required">*</span></label>
+                        <input class="form-control" id="bd_invoice" required placeholder="GEM/2024/B/XXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>Purchase Date <span class="required">*</span></label>
+                        <input class="form-control" type="date" id="bd_date" required>
+                    </div>
+                </div>
+
+                <h3 style="font-size:0.9rem;margin:20px 0 10px;color:var(--primary)">🖥 CPU Unit</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>CPU Name</label><input class="form-control" id="bd_cpu_name" value="Desktop CPU"></div>
+                    <div class="form-group"><label>CPU Cost (₹) <span class="required">*</span></label><input class="form-control" type="number" id="bd_cpu_cost" min="1" step="0.01" required></div>
+                    <div class="form-group"><label>CPU Serial <span class="required">*</span></label><input class="form-control" id="bd_cpu_serial" required></div>
+                    <div class="form-group"><label>CPU Make & Model <span class="required">*</span></label><input class="form-control" id="bd_cpu_make" required></div>
+                    <div class="form-group admin-only"><label>MAC Address</label><input class="form-control" id="bd_cpu_mac" maxlength="17"></div>
+                    <div class="form-group admin-only"><label>IP Address</label><input class="form-control" id="bd_cpu_ip" maxlength="15"></div>
+                </div>
+
+                <h3 style="font-size:0.9rem;margin:20px 0 10px;color:var(--primary)">🖵 Monitor</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Monitor Name</label><input class="form-control" id="bd_mon_name" value="Desktop Monitor"></div>
+                    <div class="form-group"><label>Monitor Cost (₹) <span class="required">*</span></label><input class="form-control" type="number" id="bd_mon_cost" min="1" step="0.01" required></div>
+                    <div class="form-group"><label>Monitor Serial <span class="required">*</span></label><input class="form-control" id="bd_mon_serial" required></div>
+                    <div class="form-group"><label>Monitor Make & Model <span class="required">*</span></label><input class="form-control" id="bd_mon_make" required></div>
+                </div>
+
+                <div class="form-group" style="margin-top:12px">
+                    <label>Warranty Expiry</label>
+                    <input class="form-control" type="date" id="bd_warranty" style="max-width:220px">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('bundleModal')">Cancel</button>
+                    <button type="submit" class="btn btn-accent" id="bd_submit">Create Bundle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ ASSET DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal" style="max-width:700px">
+        <div class="modal-header">
+            <h2 id="detailTitle">Asset Details</h2>
+            <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+        </div>
+        <div class="modal-body" id="detailBody">
+            <div class="loading-overlay"><div class="spinner"></div></div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/assets.js"></script>
+</body>
+</html>

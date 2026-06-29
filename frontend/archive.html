@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECoR-OAMS Archive — View condemned and decommissioned assets">
+    <title>ECoR-OAMS · Archive</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🚆</div>
+            <div>
+                <h2>ECoR-OAMS</h2>
+                <span>Asset Management</span>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="/assets"><span class="nav-icon">📦</span> Assets</a>
+                <a href="/transfers"><span class="nav-icon">🔄</span> Transfers</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Reports</div>
+                <a href="/assets?tab=depreciation"><span class="nav-icon">📉</span> Depreciation</a>
+            </div>
+            <div class="nav-section auditor-only" style="display:none">
+                <div class="nav-section-title">Settings</div>
+                <a href="/categories"><span class="nav-icon">⚙️</span> Categories</a>
+                <a href="/archive" class="active"><span class="nav-icon">🗄️</span> Archive</a>
+            </div>
+            <div class="nav-section it-admin-only" style="display:none">
+                <div class="nav-section-title">Admin</div>
+                <a href="/admin/users"><span class="nav-icon">👥</span> User Management</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Support</div>
+                <a href="/faq"><span class="nav-icon">📚</span> FAQ / Knowledge Base</a>
+                <a href="/report"><span class="nav-icon">🐛</span> Report System Issue</a>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar"></div>
+                <div class="user-details">
+                    <div class="user-name"></div>
+                    <div class="user-role"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="main-content">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="btn btn-ghost btn-icon" id="menuToggle" style="display:none">☰</button>
+                <h1>🗄️ Asset Archive</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-outline btn-sm btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <div class="page-content">
+
+            <!-- Info Banner -->
+            <div class="alert-banner alert-info" style="margin-bottom:20px">
+                <span class="alert-icon">ℹ</span>
+                <span>This view shows <strong>condemned / decommissioned</strong> assets (soft-deleted). These are excluded from the main dashboard and asset register.</span>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar" style="margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <label style="font-size:0.85rem;font-weight:600">
+                        <input type="checkbox" id="selectAll" style="margin-right:6px">
+                        Select All
+                    </label>
+                    <span class="text-muted" id="selectedCount" style="font-size:0.8rem">0 selected</span>
+                </div>
+                <div style="margin-left:auto">
+                    <button class="btn btn-primary btn-sm auditor-only" id="btnBulkCondemn" onclick="bulkCondemn()" style="display:none" disabled>
+                        ⚠ Bulk Decommission Selected
+                    </button>
+                </div>
+            </div>
+
+            <!-- Condemned Assets Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Condemned Assets</h2>
+                    <span class="badge badge-condemned" id="archiveCount">0 items</span>
+                </div>
+                <div class="card-body no-padding">
+                    <div class="data-table-wrapper">
+                        <table class="data-table" id="archiveTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px">
+                                        <input type="checkbox" id="headerCheckbox" onchange="toggleAllCheckboxes(this.checked)">
+                                    </th>
+                                    <th>Asset ID</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Purchase Cost (₹)</th>
+                                    <th>Status</th>
+                                    <th>Lifecycle</th>
+                                    <th>Priority Tag</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archiveBody">
+                                <tr><td colspan="8"><div class="loading-overlay"><div class="spinner"></div><span>Loading archived assets…</span></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/archive.js"></script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECoR-OAMS Admin — Manage users and system lockdown">
+    <title>ECoR-OAMS · User Management</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🚆</div>
+            <div>
+                <h2>ECoR-OAMS</h2>
+                <span>Asset Management</span>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="/assets"><span class="nav-icon">📦</span> Assets</a>
+                <a href="/transfers"><span class="nav-icon">🔄</span> Transfers</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Reports</div>
+                <a href="/assets?tab=depreciation"><span class="nav-icon">📉</span> Depreciation</a>
+            </div>
+            <div class="nav-section auditor-only" style="display:none">
+                <div class="nav-section-title">Settings</div>
+                <a href="/categories"><span class="nav-icon">⚙️</span> Categories</a>
+                <a href="/archive"><span class="nav-icon">🗄️</span> Archive</a>
+            </div>
+            <div class="nav-section it-admin-only" style="display:none">
+                <div class="nav-section-title">Admin</div>
+                <a href="/admin/users" class="active"><span class="nav-icon">👥</span> User Management</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Support</div>
+                <a href="/faq"><span class="nav-icon">📚</span> FAQ / Knowledge Base</a>
+                <a href="/report"><span class="nav-icon">🐛</span> Report System Issue</a>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar"></div>
+                <div class="user-details">
+                    <div class="user-name"></div>
+                    <div class="user-role"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="main-content">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="btn btn-ghost btn-icon" id="menuToggle" style="display:none">☰</button>
+                <h1>👥 User Management</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-outline btn-sm btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <div class="page-content">
+
+            <!-- Lockdown Control Card -->
+            <div class="card" style="margin-bottom:24px;animation-delay:0.05s">
+                <div class="card-header">
+                    <h2>🔐 System Lockdown</h2>
+                    <span class="badge" id="lockdownBadge">Loading…</span>
+                </div>
+                <div class="card-body" style="display:flex;align-items:center;gap:16px">
+                    <p style="flex:1;font-size:0.88rem;margin:0">
+                        When active, all POST/PUT/PATCH/DELETE requests are blocked for non-admin users.
+                    </p>
+                    <button class="btn btn-primary" id="lockdownToggle" onclick="toggleLockdown()">
+                        Toggle Lockdown
+                    </button>
+                </div>
+            </div>
+
+            <!-- Create User Card -->
+            <div class="card" style="margin-bottom:24px;animation-delay:0.1s">
+                <div class="card-header">
+                    <h2>➕ Create New User</h2>
+                </div>
+                <div class="card-body">
+                    <form id="createUserForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Username <span class="required">*</span></label>
+                                <input class="form-control" id="cu_username" required placeholder="e.g. custodian2" minlength="3" maxlength="50">
+                            </div>
+                            <div class="form-group">
+                                <label>Password <span class="required">*</span></label>
+                                <input class="form-control" type="password" id="cu_password" required placeholder="Min 6 characters" minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label>Full Name <span class="required">*</span></label>
+                                <input class="form-control" id="cu_fullname" required placeholder="e.g. Suresh Patnaik">
+                            </div>
+                            <div class="form-group">
+                                <label>Employee ID <span class="required">*</span></label>
+                                <input class="form-control" id="cu_empid" required placeholder="e.g. ECoR-C-1002">
+                            </div>
+                            <div class="form-group">
+                                <label>Role <span class="required">*</span></label>
+                                <select class="form-control" id="cu_role" required>
+                                    <option value="">Select role</option>
+                                    <option value="custodian">Custodian</option>
+                                    <option value="it_admin">IT Admin</option>
+                                    <option value="auditor">Auditor</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="reset" class="btn btn-outline">Clear</button>
+                            <button type="submit" class="btn btn-primary" id="cu_submit">Create User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="card" style="animation-delay:0.15s">
+                <div class="card-header">
+                    <h2>📋 System Users</h2>
+                    <span class="badge badge-inuse" id="userCount">0 users</span>
+                </div>
+                <div class="card-body no-padding">
+                    <div class="data-table-wrapper">
+                        <table class="data-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Full Name</th>
+                                    <th>Employee ID</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersBody">
+                                <tr><td colspan="8"><div class="loading-overlay"><div class="spinner"></div><span>Loading users…</span></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/admin_users.js"></script>
+</body>
+</html>

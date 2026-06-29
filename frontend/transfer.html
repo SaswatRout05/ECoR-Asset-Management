@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECoR-OAMS Asset Transfers — Initiate and acknowledge custody transfers">
+    <title>ECoR-OAMS · Transfers</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🚆</div>
+            <div>
+                <h2>ECoR-OAMS</h2>
+                <span>Asset Management</span>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="/assets"><span class="nav-icon">📦</span> Assets</a>
+                <a href="/transfers"><span class="nav-icon">🔄</span> Transfers</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Reports</div>
+                <a href="/assets?tab=depreciation"><span class="nav-icon">📉</span> Depreciation</a>
+            </div>
+            <div class="nav-section auditor-only" style="display:none">
+                <div class="nav-section-title">Settings</div>
+                <a href="/categories">
+                    <span class="nav-icon">⚙️</span> Categories
+                </a>
+                <a href="/archive">
+                    <span class="nav-icon">🗄️</span> Archive
+                </a>
+            </div>
+            <div class="nav-section it-admin-only" style="display:none">
+                <div class="nav-section-title">Admin</div>
+                <a href="/admin/users">
+                    <span class="nav-icon">👥</span> User Management
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Support</div>
+                <a href="/faq">
+                    <span class="nav-icon">📚</span> FAQ / Knowledge Base
+                </a>
+                <a href="/report">
+                    <span class="nav-icon">🐛</span> Report System Issue
+                </a>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar"></div>
+                <div class="user-details">
+                    <div class="user-name"></div>
+                    <div class="user-role"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="main-content">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="btn btn-ghost btn-icon" id="menuToggle" style="display:none">☰</button>
+                <h1>Asset Transfers</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-outline btn-sm btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <div class="page-content">
+
+            <!-- Transfer Form Card -->
+            <div class="card write-only" style="margin-bottom:24px;animation-delay:0.05s">
+                <div class="card-header">
+                    <h2>🔄 Initiate New Transfer</h2>
+                </div>
+                <div class="card-body">
+                    <form id="transferForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Asset ID <span class="required">*</span></label>
+                                <input class="form-control" id="tf_asset_id" required placeholder="Enter 12-character asset ID" maxlength="12" style="text-transform:uppercase;font-family:monospace">
+                            </div>
+                            <div class="form-group">
+                                <label>Transfer Date</label>
+                                <input class="form-control" type="date" id="tf_date">
+                            </div>
+                            <div class="form-group">
+                                <label>Building / Block <span class="required">*</span></label>
+                                <input class="form-control" id="tf_building" required placeholder="e.g. Administrative Block">
+                            </div>
+                            <div class="form-group">
+                                <label>Room Number <span class="required">*</span></label>
+                                <input class="form-control" id="tf_room" required placeholder="e.g. A-201">
+                            </div>
+                            <div class="form-group">
+                                <label>New Custodian (Emp ID) <span class="required">*</span></label>
+                                <input class="form-control" id="tf_custodian" required placeholder="e.g. ECoR-C-1001">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="reset" class="btn btn-outline">Clear</button>
+                            <button type="submit" class="btn btn-primary" id="tf_submit">Initiate Transfer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Pending Transfers -->
+            <div class="card" style="margin-bottom:24px;animation-delay:0.15s">
+                <div class="card-header">
+                    <h2>⏳ Pending Acknowledgments</h2>
+                    <span class="badge badge-pending" id="pendingCount">0 pending</span>
+                </div>
+                <div class="card-body no-padding">
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Asset ID</th>
+                                    <th>Building / Block</th>
+                                    <th>Room</th>
+                                    <th>Custodian</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th class="write-only">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingBody">
+                                <tr><td colspan="8"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Transfers History -->
+            <div class="card" style="animation-delay:0.25s">
+                <div class="card-header">
+                    <h2>📋 Transfer History</h2>
+                    <select class="filter-select" id="historyFilter" style="font-size:0.8rem">
+                        <option value="">All Transfers</option>
+                        <option value="true">Acknowledged</option>
+                        <option value="false">Pending</option>
+                    </select>
+                </div>
+                <div class="card-body no-padding">
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Asset ID</th>
+                                    <th>Building / Block</th>
+                                    <th>Room</th>
+                                    <th>Custodian</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody">
+                                <tr><td colspan="7"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/transfer.js"></script>
+</body>
+</html>
