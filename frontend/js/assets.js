@@ -26,7 +26,74 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     loadAssets();
     setupEventListeners();
+
+    // CR-2026-011: Check for pending invoice autofill from dashboard or session
+    const savedInvoice = sessionStorage.getItem('ecor_autofill_invoice');
+    if (savedInvoice) {
+        try {
+            const parsed = JSON.parse(savedInvoice);
+            sessionStorage.removeItem('ecor_autofill_invoice');
+            populateCreateFormWithInvoice(parsed);
+        } catch (e) {
+            console.error('Failed to parse saved invoice data:', e);
+        }
+    }
 });
+
+
+// CR-2026-011: Helper to populate Create Asset Form with extracted invoice data
+function populateCreateFormWithInvoice(data) {
+    if (!data) return;
+    openModal('createAssetModal');
+
+    if (data.asset_name) {
+        document.getElementById('ca_name').value = data.asset_name;
+    }
+    if (data.total_cost) {
+        document.getElementById('ca_cost').value = data.total_cost;
+    }
+    if (data.date) {
+        document.getElementById('ca_date').value = data.date;
+    }
+    if (data.gem_invoice_ref) {
+        document.getElementById('ca_invoice').value = data.gem_invoice_ref;
+    }
+
+    // Try to auto-detect category
+    const catSelect = document.getElementById('ca_category');
+    if (catSelect) {
+        const textToSearch = `${data.asset_name || ''} ${data.make_and_model || ''} ${data.vendor_name || ''}`.toLowerCase();
+        let targetCatName = '';
+        if (/optiplex|thinkpad|laptop|desktop|switch|router|cisco|dell|lenovo|server|monitor|macbook/i.test(textToSearch)) {
+            targetCatName = 'IT Hardware';
+        } else if (/printer|scanner|xerox|epson|canon|copier/i.test(textToSearch)) {
+            targetCatName = 'Office Automation';
+        } else if (/ac|split\s*ac|fan|heater|inverter|geyser|light/i.test(textToSearch)) {
+            targetCatName = 'Electrical Appliances';
+        } else if (/chair|desk|table|almirah|sofa|workstation|cabinet/i.test(textToSearch)) {
+            targetCatName = 'Office Furniture';
+        }
+
+        if (targetCatName) {
+            for (let i = 0; i < catSelect.options.length; i++) {
+                if (catSelect.options[i].dataset?.name === targetCatName || catSelect.options[i].textContent === targetCatName) {
+                    catSelect.selectedIndex = i;
+                    catSelect.dispatchEvent(new Event('change'));
+                    break;
+                }
+            }
+        }
+    }
+
+    if (data.make_and_model && document.getElementById('ca_make')) {
+        document.getElementById('ca_make').value = data.make_and_model;
+    }
+    if (data.serial_number && document.getElementById('ca_serial')) {
+        document.getElementById('ca_serial').value = data.serial_number;
+    }
+
+    showToast('Invoice extracted & auto-filled into form!', 'success');
+}
 
 
 // CR-2026-006: Fetch categories from API and populate dropdowns
@@ -71,6 +138,56 @@ async function loadCategories() {
 
 
 function setupEventListeners() {
+    // CR-2026-011: Invoice Upload Handler
+    const assetsUploadInput = document.getElementById('assetsInvoiceUpload');
+    const btnAssetsUpload   = document.getElementById('btnAssetsUpload');
+    if (assetsUploadInput) {
+        assetsUploadInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                showToast('Please select a valid PDF file (.pdf)', 'error');
+                assetsUploadInput.value = '';
+                return;
+            }
+
+            const origText = btnAssetsUpload ? btnAssetsUpload.textContent : '';
+            if (btnAssetsUpload) {
+                btnAssetsUpload.disabled = true;
+                btnAssetsUpload.textContent = '⏳ Parsing PDF…';
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const token = Auth.getToken();
+                const res = await fetch('/api/assets/upload-bill', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData,
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || 'Failed to extract invoice data');
+                }
+
+                const data = await res.json();
+                populateCreateFormWithInvoice(data.extracted_data);
+            } catch (err) {
+                showToast('Invoice upload failed: ' + err.message, 'error');
+            } finally {
+                if (btnAssetsUpload) {
+                    btnAssetsUpload.disabled = false;
+                    btnAssetsUpload.textContent = origText;
+                }
+                assetsUploadInput.value = '';
+            }
+        });
+    }
+
     // Search with debounce
     let searchTimeout;
     document.getElementById('searchInput').addEventListener('input', () => {

@@ -10,7 +10,7 @@ import secrets
 import string
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session, joinedload
 
@@ -26,9 +26,53 @@ from ..schemas import (
     DesktopBundleCreate, DesktopBundleResponse,
     AllocationResponse, RepairLogResponse, RepairLogCreate,
     AssetDetailResponse, BulkCondemnRequest,
+    InvoiceUploadResponse, InvoiceExtractionData,
 )
+from ..invoice_parser import extract_invoice_data_from_pdf
 
 router = APIRouter(prefix="/api/assets", tags=["Assets"])
+
+
+# ═══════════════════════════════════════════════════════════
+#  CR-2026-011: SMART INVOICE ONBOARDING (PDF Extractor)
+# ═══════════════════════════════════════════════════════════
+
+@router.post("/upload-bill", response_model=InvoiceUploadResponse)
+async def upload_bill(
+    file: UploadFile = File(...),
+    user: dict = Depends(require_role("custodian", "it_admin")),
+):
+    """
+    CR-2026-011: Smart Invoice Onboarding (PDF Extractor).
+    Accepts multipart/form-data PDF file, extracts Date, Total Cost, Vendor,
+    Invoice Reference, and Item name, and returns structured JSON.
+    """
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file format. Please upload a PDF file (.pdf).",
+        )
+
+    contents = await file.read()
+    if not contents or len(contents) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file is empty.",
+        )
+
+    try:
+        extracted = extract_invoice_data_from_pdf(contents)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Failed to parse PDF invoice: {str(e)}",
+        )
+
+    return InvoiceUploadResponse(
+        success=True,
+        filename=file.filename,
+        extracted_data=InvoiceExtractionData(**extracted),
+    )
 
 
 # ── Helpers ───────────────────────────────────────────────

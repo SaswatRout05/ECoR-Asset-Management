@@ -293,3 +293,63 @@ async function loadPriorityFlags() {
         console.error('Failed to load priority flags:', err);
     }
 }
+
+
+// ═══════════════════════════════════════════════════════════
+//  CR-2026-011: SMART INVOICE ONBOARDING UPLOAD HANDLER
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('dashboardInvoiceUpload');
+    const uploadBtn = document.getElementById('btnDashboardUpload');
+    if (!fileInput) return;
+
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            showToast('Please select a valid PDF file (.pdf)', 'error');
+            fileInput.value = '';
+            return;
+        }
+
+        const origText = uploadBtn ? uploadBtn.textContent : '';
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '⏳ Parsing PDF…';
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const token = localStorage.getItem('ecor_token');
+            const res = await fetch('/api/assets/upload-bill', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: formData,
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.detail || 'Failed to extract invoice data');
+            }
+
+            const data = await res.json();
+            // Store extracted data for autofill
+            sessionStorage.setItem('ecor_autofill_invoice', JSON.stringify(data.extracted_data));
+            window.location.href = '/assets?autofill=true';
+        } catch (err) {
+            showToast('Invoice parsing failed: ' + err.message, 'error');
+        } finally {
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = origText;
+            }
+            fileInput.value = '';
+        }
+    });
+});

@@ -16,12 +16,23 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 @router.post("/login", response_model=LoginResponse)
 def login(req: LoginRequest, db: Session = Depends(get_db)):
-    """Authenticate user and return JWT token with embedded role."""
-    user = db.query(User).filter(User.username == req.username).first()
+    """
+    CR-2026-011: Authenticate user by emp_id (or username) and hashed password.
+    Returns JWT token with embedded identity & role.
+    """
+    user = None
+    if req.emp_id:
+        user = db.query(User).filter(User.emp_id == req.emp_id.strip()).first()
+    if not user and req.username:
+        u_val = req.username.strip()
+        user = db.query(User).filter(
+            (User.emp_id == u_val) | (User.username == u_val)
+        ).first()
+
     if not user or not verify_password(req.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
+            detail="Invalid Employee ID / Username or Password",
         )
     # CR-2026-009: Block inactive users
     if hasattr(user, "is_active") and not user.is_active:

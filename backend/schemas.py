@@ -17,7 +17,8 @@ from pydantic import BaseModel, Field, field_validator
 # ═══════════════════════════════════════════════════════════
 
 class LoginRequest(BaseModel):
-    username: str
+    emp_id: Optional[str] = None
+    username: Optional[str] = None
     password: str
 
 
@@ -25,6 +26,27 @@ class LoginResponse(BaseModel):
     access_token: str
     role: str
     full_name: str
+
+
+# ═══════════════════════════════════════════════════════════
+#  CR-2026-011: Invoice Parsing
+# ═══════════════════════════════════════════════════════════
+
+class InvoiceExtractionData(BaseModel):
+    date: Optional[str] = None
+    total_cost: Optional[float] = None
+    vendor_name: Optional[str] = None
+    gem_invoice_ref: Optional[str] = None
+    asset_name: Optional[str] = None
+    make_and_model: Optional[str] = None
+    serial_number: Optional[str] = None
+    raw_text_snippet: Optional[str] = None
+
+
+class InvoiceUploadResponse(BaseModel):
+    success: bool
+    filename: str
+    extracted_data: InvoiceExtractionData
 
 
 class UserInfo(BaseModel):

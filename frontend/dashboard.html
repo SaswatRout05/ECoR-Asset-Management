@@ -3,91 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ECoR-OAMS Dashboard — Real-time asset metrics and analytics">
-    <title>ECoR-OAMS · Dashboard</title>
+    <meta name="description" content="ECoR-AMP Dashboard — Official East Coast Railway Asset Management Platform">
+    <title>ECoR-AMP · Dashboard</title>
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['selector', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    colors: {
+                        railMaroon: '#7B1113',
+                        railDarkMaroon: '#5A0B0D',
+                        railNavy: '#0B1A30',
+                        railNavyDark: '#07101E',
+                        railBlue: '#1F4E79',
+                        railGold: '#D4AF37'
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
-<div class="app-layout">
+<body class="bg-[#F0F2F5] dark:bg-slate-950 font-sans antialiased text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
 
-    <!-- ═══ SIDEBAR ═══ -->
-    <nav class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <div class="brand-icon">🚆</div>
+    <!-- ═══ TOP OFFICIAL RAILWAY MASTHEAD ═══ -->
+    <header class="w-full bg-[#7B1113] text-white py-1 px-4 shadow-sm z-50 text-center tracking-wide text-xs sm:text-xs font-semibold select-none flex items-center justify-between border-b border-amber-500/30">
+        <div class="flex items-center gap-2">
+            <span class="text-amber-400">🏛️</span>
+            <span class="hidden sm:inline text-amber-100">सत्यमेव जयते</span>
+        </div>
+        <div class="text-center font-medium leading-tight">
+            <span class="font-bold text-amber-200">भारत सरकार • GOVERNMENT OF INDIA</span>
+            <span class="mx-2 text-amber-400/70">|</span>
+            <span>रेल मंत्रालय • MINISTRY OF RAILWAYS</span>
+            <span class="mx-2 text-amber-400/70">|</span>
+            <span class="text-amber-200 font-semibold">पूर्व तट रेलवे • EAST COAST RAILWAY</span>
+        </div>
+        <div class="text-right text-[11px] text-amber-200 hidden md:flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>SECURE INTRANET</span>
+        </div>
+    </header>
+
+    <!-- ═══ SUB-HEADER (WHITE BRANDING BAR) ═══ -->
+    <div class="w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-xs sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-[#7B1113] text-white flex items-center justify-center font-bold text-xl shadow-sm ring-2 ring-amber-400/60">
+                🚆
+            </div>
             <div>
-                <h2>ECoR-OAMS</h2>
-                <span>Asset Management</span>
+                <h1 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight flex items-center gap-2">
+                    <span>Asset Management Platform</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-[#1F4E79] dark:text-blue-300 border border-blue-200 dark:border-blue-700">ECoR-AMP</span>
+                </h1>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Headquarter Office, Chandrasekharpur, Bhubaneswar — 751017</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-xs text-slate-500 hidden sm:inline" id="headerDate"></span>
+            <input type="file" id="dashboardInvoiceUpload" accept=".pdf" style="display:none">
+            <button class="btn btn-primary btn-sm write-only" id="btnDashboardUpload" onclick="document.getElementById('dashboardInvoiceUpload').click()">
+                📄 Upload Invoice
+            </button>
+            <button class="btn btn-outline btn-sm btn-logout">Logout</button>
+        </div>
+    </div>
+
+<div class="app-layout flex-1">
+
+    <!-- ═══ OFFICIAL NAVY SIDEBAR ═══ -->
+    <nav class="sidebar bg-[#0B1A30] text-slate-300" id="sidebar">
+        <div class="sidebar-brand border-b border-slate-800 pb-3 mb-2">
+            <div class="brand-icon bg-[#7B1113] text-amber-300 font-bold p-2 rounded-lg text-lg">ECoR</div>
+            <div>
+                <h2 class="text-white font-bold tracking-wider text-sm">ECoR-AMP</h2>
+                <span class="text-[11px] text-amber-400 font-medium">Railway Portal</span>
             </div>
         </div>
 
-        <div class="sidebar-nav">
+        <div class="sidebar-nav space-y-4">
+            <!-- OPERATIONS -->
             <div class="nav-section">
-                <div class="nav-section-title">Main</div>
+                <div class="nav-section-title text-[11px] uppercase tracking-wider text-slate-400 font-bold px-3 py-1">OPERATIONS</div>
                 <a href="/dashboard" class="active">
                     <span class="nav-icon">📊</span> Dashboard
                 </a>
-                <a href="/assets">
-                    <span class="nav-icon">📦</span> Assets
+                <a href="javascript:void(0)" onclick="openQRScannerModal()">
+                    <span class="nav-icon">📷</span> QR Code Scanner
                 </a>
-                <a href="/transfers">
-                    <span class="nav-icon">🔄</span> Transfers
-                    <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
+                <a href="javascript:void(0)" onclick="document.getElementById('dashboardInvoiceUpload').click()">
+                    <span class="nav-icon">📑</span> Invoice OCR
                 </a>
-            </div>
-            <div class="nav-section">
-                <div class="nav-section-title">Reports</div>
-                <a href="/assets?tab=depreciation">
-                    <span class="nav-icon">📉</span> Depreciation
-                </a>
-            </div>
-            <div class="nav-section auditor-only" style="display:none">
-                <div class="nav-section-title">Settings</div>
-                <a href="/categories">
-                    <span class="nav-icon">⚙️</span> Categories
-                </a>
-                <a href="/archive">
-                    <span class="nav-icon">🗄️</span> Archive
-                </a>
-            </div>
-            <div class="nav-section it-admin-only" style="display:none">
-                <div class="nav-section-title">Admin</div>
-                <a href="/admin/users">
-                    <span class="nav-icon">👥</span> User Management
+                <a href="/faq">
+                    <span class="nav-icon">🤖</span> AI Assistant
                 </a>
             </div>
 
+            <!-- ASSETS -->
             <div class="nav-section">
-                <div class="nav-section-title">Support</div>
-                <a href="/faq">
-                    <span class="nav-icon">📚</span> FAQ / Knowledge Base
+                <div class="nav-section-title text-[11px] uppercase tracking-wider text-slate-400 font-bold px-3 py-1">ASSETS</div>
+                <a href="/assets">
+                    <span class="nav-icon">📦</span> Assets Registry
                 </a>
-                <a href="/report">
-                    <span class="nav-icon">🐛</span> Report System Issue
+                <a href="/assets?mine=1">
+                    <span class="nav-icon">💼</span> My Assets
+                </a>
+            </div>
+
+            <!-- MAINTENANCE -->
+            <div class="nav-section">
+                <div class="nav-section-title text-[11px] uppercase tracking-wider text-slate-400 font-bold px-3 py-1">MAINTENANCE</div>
+                <a href="/transfers?tab=maintenance">
+                    <span class="nav-icon">🛠️</span> Work Orders
+                </a>
+            </div>
+
+            <!-- INVENTORY -->
+            <div class="nav-section">
+                <div class="nav-section-title text-[11px] uppercase tracking-wider text-slate-400 font-bold px-3 py-1">INVENTORY</div>
+                <a href="/transfers">
+                    <span class="nav-icon">📋</span> Asset Assignment
+                    <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
+                </a>
+                <a href="/transfers?tab=return">
+                    <span class="nav-icon">🔄</span> Return Assets
+                </a>
+            </div>
+
+            <!-- ADMINISTRATION -->
+            <div class="nav-section">
+                <div class="nav-section-title text-[11px] uppercase tracking-wider text-slate-400 font-bold px-3 py-1">ADMINISTRATION</div>
+                <a href="/admin/users" class="it-admin-only">
+                    <span class="nav-icon">👥</span> User Accounts
+                </a>
+                <a href="/assets?tab=vendors">
+                    <span class="nav-icon">🏢</span> Vendors Directory
+                </a>
+                <a href="/archive">
+                    <span class="nav-icon">📜</span> Audit History
+                </a>
+            </div>
+
+            <!-- SETTINGS -->
+            <div class="nav-section">
+                <div class="nav-section-title text-[11px] uppercase tracking-wider text-slate-400 font-bold px-3 py-1">SETTINGS</div>
+                <a href="/categories">
+                    <span class="nav-icon">⚙️</span> System Settings
+                </a>
+                <a href="javascript:void(0)" onclick="openCategoryManagerModal()" class="admin-only it-admin-only">
+                    <span class="nav-icon">🏷️</span> Manage Categories
                 </a>
             </div>
         </div>
 
-        <div class="sidebar-footer">
-            <div class="user-info">
-                <div class="user-avatar"></div>
+        <div class="sidebar-footer border-t border-slate-800 pt-3 mt-auto">
+            <div class="user-info flex items-center gap-3">
+                <div class="user-avatar bg-amber-500 text-slate-900 font-bold"></div>
                 <div class="user-details">
-                    <div class="user-name"></div>
-                    <div class="user-role"></div>
+                    <div class="user-name text-white font-semibold text-xs"></div>
+                    <div class="user-role text-[10px] text-amber-400 uppercase font-mono"></div>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- ═══ MAIN CONTENT ═══ -->
-    <div class="main-content">
+    <div class="main-content flex-1">
         <header class="app-header">
             <div class="header-left">
                 <button class="btn btn-ghost btn-icon" id="menuToggle" style="display:none">☰</button>
-                <h1>Dashboard</h1>
+                <h1 class="text-xl font-bold text-slate-800 dark:text-white">Dashboard & Real-Time Analytics</h1>
             </div>
             <div class="header-right">
-                <span class="text-muted" style="font-size:0.8rem" id="headerDate"></span>
-                <button class="btn btn-outline btn-sm btn-logout">Logout</button>
+                <!-- Theme toggle injected by ThemeManager -->
             </div>
         </header>
 

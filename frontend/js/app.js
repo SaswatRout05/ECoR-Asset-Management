@@ -403,6 +403,165 @@ function renderDonutChart(elementId, data, colors) {
 
 
 // ═══════════════════════════════════════════════════════════
+//  CATEGORY MANAGEMENT MODAL (ADMIN & AUDITOR)
+// ═══════════════════════════════════════════════════════════
+
+async function openCategoryManagerModal() {
+    let modal = document.getElementById('manageCategoriesModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.id = 'manageCategoriesModal';
+        modal.innerHTML = `
+            <div class="modal modal-md">
+                <div class="modal-header">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">⚙️</span>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800 dark:text-white">Dynamic Asset Categories</h2>
+                            <p class="text-xs text-slate-500">Add and manage asset classifications</p>
+                        </div>
+                    </div>
+                    <button class="modal-close" onclick="closeModal('manageCategoriesModal')">&times;</button>
+                </div>
+                <div class="modal-body space-y-4">
+                    <!-- Create Form -->
+                    <form id="globalAddCategoryForm" onsubmit="handleGlobalCreateCategory(event)" class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            New Category Name <span class="text-red-500">*</span>
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="globalNewCatInput" required placeholder="e.g. Rolling Stock Equipment" 
+                                class="form-control flex-1 text-sm bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 rounded-md" />
+                            <button type="submit" id="btnGlobalSaveCat" class="btn btn-primary btn-sm flex items-center gap-1.5 px-4 font-semibold">
+                                <span>➕</span> Add
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Existing Categories List -->
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">Existing Categories</h4>
+                        <div id="modalCategoriesList" class="max-h-60 overflow-y-auto space-y-1.5 border border-slate-200 dark:border-slate-700 rounded-lg p-2 bg-white dark:bg-slate-900">
+                            <div class="text-xs text-center py-4 text-slate-400">Loading categories...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-between">
+                    <span class="text-xs text-slate-500">Changes reflect instantly in Add Asset form</span>
+                    <button class="btn btn-outline btn-sm" onclick="closeModal('manageCategoriesModal')">Done</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    openModal('manageCategoriesModal');
+    await refreshModalCategoriesList();
+}
+
+async function refreshModalCategoriesList() {
+    const listEl = document.getElementById('modalCategoriesList');
+    if (!listEl) return;
+    try {
+        const cats = await api.get('/api/categories');
+        if (!cats || cats.length === 0) {
+            listEl.innerHTML = `<div class="text-xs text-center py-3 text-slate-400">No categories found. Add one above.</div>`;
+            return;
+        }
+        listEl.innerHTML = cats.map(c => `
+            <div class="flex items-center justify-between p-2 rounded bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <span class="text-sm font-medium text-slate-800 dark:text-slate-200">${c.category_name}</span>
+                </div>
+                <span class="text-[11px] text-slate-400 font-mono">ID: ${c.category_id}</span>
+            </div>
+        `).join('');
+    } catch (err) {
+        listEl.innerHTML = `<div class="text-xs text-red-500 text-center py-2">Failed to load categories</div>`;
+    }
+}
+
+async function handleGlobalCreateCategory(e) {
+    e.preventDefault();
+    const input = document.getElementById('globalNewCatInput');
+    const name = input.value.trim();
+    if (!name) return;
+
+    const btn = document.getElementById('btnGlobalSaveCat');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const created = await api.post('/api/categories', { category_name: name });
+        if (created) {
+            showToast(`Category "${created.category_name}" added successfully!`, 'success');
+            input.value = '';
+            await refreshModalCategoriesList();
+            
+            // Dispatch event so any open asset form or filter updates dynamically
+            window.dispatchEvent(new CustomEvent('ecor:categories-updated', { detail: created }));
+            if (typeof loadCategories === 'function') {
+                await loadCategories();
+            }
+        }
+    } catch (err) {
+        showToast(err.message || 'Failed to create category', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>➕</span> Add';
+    }
+}
+
+// Global modal triggers for QR Scanner & OCR
+function openQRScannerModal() {
+    let modal = document.getElementById('qrScannerModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.id = 'qrScannerModal';
+        modal.innerHTML = `
+            <div class="modal modal-md">
+                <div class="modal-header">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">📷</span>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800 dark:text-white">QR Code & Barcode Scanner</h2>
+                            <p class="text-xs text-slate-500">Scan physical asset tags to pull records</p>
+                        </div>
+                    </div>
+                    <button class="modal-close" onclick="closeModal('qrScannerModal')">&times;</button>
+                </div>
+                <div class="modal-body text-center space-y-4 py-6">
+                    <div class="w-48 h-48 mx-auto border-2 border-dashed border-blue-500 rounded-xl flex flex-col items-center justify-center bg-blue-50/40 dark:bg-slate-800">
+                        <span class="text-4xl animate-pulse">📷</span>
+                        <p class="text-xs text-slate-500 mt-2 font-mono">Camera Ready</p>
+                    </div>
+                    <p class="text-sm text-slate-600 dark:text-slate-300">Point your scanner at the 12-digit ECoR Asset QR Code</p>
+                    <div class="flex gap-2 max-w-sm mx-auto">
+                        <input type="text" id="manualQrInput" placeholder="Or enter 12-char Asset ID (e.g. 2026-IT-XXXX)" class="form-control text-sm font-mono">
+                        <button class="btn btn-primary btn-sm" onclick="handleManualQrLookup()">Lookup</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline btn-sm" onclick="closeModal('qrScannerModal')">Close</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    openModal('qrScannerModal');
+}
+
+function handleManualQrLookup() {
+    const id = document.getElementById('manualQrInput')?.value?.trim();
+    if (!id) return;
+    closeModal('qrScannerModal');
+    window.location.href = `/assets?search=${encodeURIComponent(id)}`;
+}
+
+// ═══════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════
 
@@ -411,4 +570,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!Auth.requireAuth()) return;
         initSidebar();
     }
+    // Listen for category updates
+    window.addEventListener('ecor:categories-updated', () => {
+        if (typeof loadCategories === 'function') {
+            loadCategories();
+        }
+    });
 });

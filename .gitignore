@@ -1,10 +1,21 @@
+# Virtual Environments
+.venv/
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
+
+# Environment variables and secrets
+.env
+.env.*
 
 # Distribution / packaging
 build/
@@ -24,15 +35,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 
-# environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
 # SQLite databases & logs
 *.db
 *.db-shm
@@ -43,3 +45,8 @@ venv.bak/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Node.js
+node_modules/
+**/node_modules/
+frontend-react/dist/

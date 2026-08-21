@@ -45,6 +45,12 @@ def get_db():
 
 # ── Bootstrap ────────────────────────────────────────────
 def init_db():
-    """Create all tables defined by ORM models."""
+    """Create all tables defined by ORM models and drop obsolete OTP tables."""
     from . import models  # noqa: F401  — import triggers table registration
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS otp_sessions"))
+        conn.execute(text("DROP TABLE IF EXISTS \"auth.OTP_Sessions\""))
+        conn.execute(text("DROP TABLE IF EXISTS \"OTP_Sessions\""))
+        conn.commit()
     Base.metadata.create_all(bind=engine)

@@ -34,9 +34,9 @@ def list_categories(
 def create_category(
     data: AssetCategoryCreate,
     db: Session = Depends(get_db),
-    user: dict = Depends(require_role("auditor")),
+    user: dict = Depends(require_role("it_admin", "auditor")),
 ):
-    """CR-2026-006: Create a new asset category. Auditor only."""
+    """Create a new asset category. Administrator (it_admin) and Auditor access."""
     existing = db.query(AssetCategoryModel).filter(
         AssetCategoryModel.category_name == data.category_name
     ).first()
@@ -62,9 +62,9 @@ def update_category(
     category_id: int,
     data: AssetCategoryUpdate,
     db: Session = Depends(get_db),
-    user: dict = Depends(require_role("auditor")),
+    user: dict = Depends(require_role("it_admin", "auditor")),
 ):
-    """CR-2026-006: Rename an asset category. Auditor only."""
+    """Rename an asset category. Administrator and Auditor access."""
     category = db.query(AssetCategoryModel).filter(
         AssetCategoryModel.category_id == category_id
     ).first()
@@ -89,14 +89,14 @@ def update_category(
 
 
 # ═══════════════════════════════════════════════════════════
-#  DELETE  (Auditor only)
+#  DELETE  (Admin / Auditor)
 # ═══════════════════════════════════════════════════════════
 
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_category(
     category_id: int,
     db: Session = Depends(get_db),
-    user: dict = Depends(require_role("auditor")),
+    user: dict = Depends(require_role("it_admin", "auditor")),
 ):
     """CR-2026-006: Delete a category. Blocked if assets reference it."""
     category = db.query(AssetCategoryModel).filter(

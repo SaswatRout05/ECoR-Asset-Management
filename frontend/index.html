@@ -20,12 +20,12 @@
 
             <form class="login-form" id="loginForm" autocomplete="on">
                 <div class="form-group">
-                    <label for="username">Username</label>
+                    <label for="emp_id">Employee ID / Username</label>
                     <input
                         type="text"
-                        id="username"
-                        name="username"
-                        placeholder="Enter your username"
+                        id="emp_id"
+                        name="emp_id"
+                        placeholder="e.g. ECoR-C-1001 or custodian1"
                         required
                         autofocus
                     >
@@ -73,12 +73,15 @@
             btn.textContent = 'Signing in…';
             errDiv.classList.remove('visible');
 
+            const idVal = document.getElementById('emp_id').value.trim();
+
             try {
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        username: document.getElementById('username').value.trim(),
+                        emp_id: idVal,
+                        username: idVal,
                         password: document.getElementById('password').value,
                     }),
                 });

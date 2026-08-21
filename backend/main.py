@@ -17,7 +17,7 @@ from .config import APP_TITLE, APP_DESCRIPTION, APP_VERSION, FRONTEND_DIR
 from .database import init_db
 
 # ── Router imports ────────────────────────────────────────
-from .routers import auth_routes, assets, transfers, metrics, dashboard, search, categories, admin
+from .routers import auth_routes, assets, transfers, metrics, dashboard, search, categories, admin, ai_assistant
 
 
 # ═══════════════════════════════════════════════════════════
@@ -90,6 +90,7 @@ app.include_router(dashboard.router)
 app.include_router(search.router)
 app.include_router(categories.router)  # CR-2026-006
 app.include_router(admin.router)       # CR-2026-009
+app.include_router(ai_assistant.router)
 
 
 # ── Startup: create tables ───────────────────────────────
