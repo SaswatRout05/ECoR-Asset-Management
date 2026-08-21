@@ -1,7 +1,6 @@
 /**
- * Login Page — Split-screen design with dual tabs.
- * Left: Railway branding + circulars list.
- * Right: Clean login card with Administrator/Employee tabs (Demo credentials box removed).
+ * Login Page — Clean, minimal split-screen design.
+ * Stripped of demo credentials, government slogans, and intranet tags.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -22,25 +21,25 @@ import {
 
 const MOCK_CIRCULARS = [
   {
-    id: 'DIV/HQ/2026-087',
+    id: 'CIRC-2026-087',
     title: 'Annual Physical Verification of Office Assets — FY 2026-27',
     date: '18 Aug 2026',
     priority: 'high',
   },
   {
-    id: 'DIV/IT/2026-045',
+    id: 'CIRC-2026-045',
     title: 'Migration to ECoR-AMP Digital Platform — Phase II Rollout',
     date: '12 Aug 2026',
     priority: 'normal',
   },
   {
-    id: 'DIV/ACC/2026-032',
+    id: 'CIRC-2026-032',
     title: 'Revised Depreciation Norms for IT Equipment (Computer & Peripherals)',
     date: '05 Aug 2026',
     priority: 'normal',
   },
   {
-    id: 'DIV/HQ/2026-029',
+    id: 'CIRC-2026-029',
     title: 'QR Code Tagging Compliance — Deadline Extension to 30 Sept 2026',
     date: '28 Jul 2026',
     priority: 'high',
@@ -100,20 +99,13 @@ export default function Login() {
       <Masthead />
 
       <div className="flex-1 flex flex-col lg:flex-row">
-        {/* ════ LEFT PANEL — Navy branding + Circulars ════ */}
+        {/* ════ LEFT PANEL — Clean Navy Branding + Circulars ════ */}
         <div className="lg:w-[55%] bg-gradient-to-br from-[#0B1A30] via-[#0F2440] to-[#163B5C] text-white p-8 lg:p-12 flex flex-col justify-center relative overflow-hidden">
-          {/* Decorative background elements */}
+          {/* Decorative subtle background elements */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#1F4E79]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#7B1113]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-amber-500/5 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2"></div>
 
           <div className="relative z-10 max-w-lg mx-auto lg:mx-0">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full text-xs text-amber-300 font-medium mb-6">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Official Railway Portal
-            </div>
-
             {/* Title */}
             <h1 className="text-3xl lg:text-4xl font-bold leading-tight mb-3">
               Asset Management
@@ -121,14 +113,13 @@ export default function Login() {
               <span className="text-amber-400">Platform</span>
             </h1>
             <div className="flex items-center gap-2 mb-6">
-              <span className="text-lg font-bold px-3 py-1 rounded-lg bg-[#7B1113] text-white border border-[#7B1113]/60 shadow-lg shadow-[#7B1113]/20">
+              <span className="text-sm font-bold px-3 py-1 rounded-lg bg-[#7B1113] text-white border border-[#7B1113]/60 shadow-xs">
                 ECoR-AMP
               </span>
-              <span className="text-sm text-slate-400">v2.0</span>
+              <span className="text-xs text-slate-400">v2.0</span>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-              Comprehensive digital platform for tracking, managing, and auditing
-              office assets across all East Coast Railway divisions and zones.
+              Digital platform for lifecycle tracking, depreciation modeling, and asset maintenance across all divisions.
             </p>
 
             {/* ── Circulars ── */}
@@ -136,7 +127,7 @@ export default function Login() {
               <div className="flex items-center gap-2 mb-4">
                 <Bell size={16} className="text-amber-400" />
                 <h3 className="text-sm font-bold text-amber-200 uppercase tracking-wider">
-                  Latest Division Circulars
+                  Latest Circulars &amp; Notices
                 </h3>
               </div>
 
@@ -174,22 +165,21 @@ export default function Login() {
           </div>
         </div>
 
-        {/* ════ RIGHT PANEL — Login card ════ */}
+        {/* ════ RIGHT PANEL — Clean Login Card ════ */}
         <div className="lg:w-[45%] flex items-center justify-center p-8 lg:p-12 bg-[#F0F2F5]">
           <div className="w-full max-w-md">
             {/* Card */}
             <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
-              {/* Gradient accent bar */}
               <div className="h-1 w-full bg-gradient-to-r from-[#7B1113] via-[#1F4E79] to-[#D4AF37]"></div>
 
               <div className="p-8">
                 {/* Title */}
                 <div className="text-center mb-6">
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#7B1113] to-[#5A0B0D] text-white flex items-center justify-center text-2xl shadow-lg shadow-[#7B1113]/30 mb-4">
+                  <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#7B1113] to-[#5A0B0D] text-white flex items-center justify-center text-2xl shadow-md shadow-[#7B1113]/30 mb-4">
                     🚆
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900">Welcome Back</h2>
-                  <p className="text-sm text-slate-500 mt-1">Sign in to your ECoR-AMP account</p>
+                  <h2 className="text-xl font-bold text-slate-900">Sign In</h2>
+                  <p className="text-sm text-slate-500 mt-1">Access your ECoR-AMP account</p>
                 </div>
 
                 {/* Tabs */}
@@ -198,7 +188,7 @@ export default function Login() {
                     onClick={() => setActiveTab('admin')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                       activeTab === 'admin'
-                        ? 'bg-white text-[#7B1113] shadow-sm'
+                        ? 'bg-white text-[#7B1113] shadow-xs'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
                   >
@@ -209,7 +199,7 @@ export default function Login() {
                     onClick={() => setActiveTab('employee')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                       activeTab === 'employee'
-                        ? 'bg-white text-[#1F4E79] shadow-sm'
+                        ? 'bg-white text-[#1F4E79] shadow-xs'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
                   >
@@ -238,7 +228,7 @@ export default function Login() {
                       onChange={(e) => setEmpId(e.target.value)}
                       placeholder={
                         activeTab === 'admin'
-                          ? 'e.g. itadmin1 or admin1'
+                          ? 'e.g. itadmin1 or auditor1'
                           : 'e.g. ECoR-C-1001 or custodian1'
                       }
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1F4E79]/30 focus:border-[#1F4E79] transition-all"
@@ -278,7 +268,7 @@ export default function Login() {
                       transition-all duration-200 cursor-pointer
                       ${loading
                         ? 'bg-slate-400 cursor-not-allowed'
-                        : 'bg-[#7B1113] hover:bg-[#5A0B0D] shadow-lg shadow-[#7B1113]/30 hover:shadow-[#7B1113]/50 active:scale-[0.98]'
+                        : 'bg-[#7B1113] hover:bg-[#5A0B0D] shadow-md shadow-[#7B1113]/30 hover:shadow-lg active:scale-[0.98]'
                       }
                     `}
                   >
@@ -301,7 +291,7 @@ export default function Login() {
 
             {/* Footer */}
             <p className="text-center text-[11px] text-slate-400 mt-6">
-              Authorized personnel only · Indian Railways © 2026
+              ECoR-AMP Portal © 2026
             </p>
           </div>
         </div>
